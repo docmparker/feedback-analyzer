@@ -1,7 +1,7 @@
 import textwrap
 from .utils import ToolSchema, escape_xml
 from .models_common import SurveyTaskProtocol, InputModel, CommentModel, CommentBatch, LLMConfig
-from pydantic import Field, validate_arguments, conint, BaseModel
+from pydantic import Field, validate_call, conint, BaseModel
 from typing import Type
 from .single_input_task import apply_task
 from feedback_analyzer.summarization import summarize_comments
@@ -163,7 +163,7 @@ call the `DerivedThemes` tool to record your results."""
         return DerivedThemes
 
 
-@validate_arguments
+@validate_call
 async def find_themes(comments: list[str | float | None], 
                       question: str, 
                       llm_config: LLMConfig | None = None) -> DerivedThemes:
