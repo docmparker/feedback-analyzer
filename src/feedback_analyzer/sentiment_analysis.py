@@ -9,6 +9,8 @@ from textwrap import fill
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+import asyncio
+from ast import literal_eval
 
 
 class Sentiment(BaseModel):
@@ -116,6 +118,43 @@ async def classify_sentiment(*, comments: list[str | float | None], question: st
     sentiment_results = await br.process_tasks(comments_to_test, sentiment_task)
 
     return sentiment_results
+
+# ====================================================================================================
+# for agent tool use
+
+class SentimentAnalysisTool(ToolSchema):
+    """Tool to analyze the sentiment of a list of comments, given the list of comments and the survey question
+    that the comments are in response to. Returns a list of SentimentAnalysisResult objects."""
+    comments: list[str | float | None] = Field(..., description="List of comments to analyze")
+    question: str = Field(..., description="The survey question that the comments are in response to")
+
+    @staticmethod
+    def execute(comments: list[str | float | None], question: str) -> list[SentimentAnalysisResult]:
+        # sometimes this gets called with a string representation of a list, rather than an actual list
+        if isinstance(comments, str):
+            comments = literal_eval(comments)
+        return asyncio.run(classify_sentiment(comments=comments, question=question))
+
+
+class SentimentAnalysisVisualizeTool(ToolSchema):
+    """Tool to visualize the sentiment analysis results, given a list of SentimentAnalysisResult objects.
+    Returns a visualization of the sentiment analysis results."""
+    sentiment_results: list[SentimentAnalysisResult] = Field(..., description="List of SentimentAnalysisResult objects")
+
+    @staticmethod
+    def execute(sentiment_results: list[SentimentAnalysisResult]):
+        # make sure this is a list and not just a string representation of a list
+        if isinstance(sentiment_results, str):
+            sentiment_results = literal_eval(sentiment_results)
+
+        # make sure the results are SentimentAnalysisResult objects and not just plain dicts
+        if not all(isinstance(result, SentimentAnalysisResult) for result in sentiment_results):
+            sentiment_results = [SentimentAnalysisResult(**result) for result in sentiment_results]
+
+        visualize_sentiment_results(sentiment_results)
+
+        return "Visualization displayed"
+
 
 # ====================================================================================================
 # some convenience functions for display
