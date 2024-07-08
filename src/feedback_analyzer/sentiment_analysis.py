@@ -123,8 +123,8 @@ async def classify_sentiment(*, comments: list[str | float | None], question: st
 # for agent tool use
 
 class SentimentAnalysisTool(ToolSchema):
-    """Tool to analyze the sentiment of a list of comments, given the list of comments and the survey question
-    that the comments are in response to. Returns a list of SentimentAnalysisResult objects."""
+    """Tool to analyze the sentiment of a list of comments, given the list of comments and the survey question \
+that the comments are in response to. Returns a list of SentimentAnalysisResult objects."""
     comments: list[str | float | None] = Field(..., description="List of comments to analyze")
     question: str = Field(..., description="The survey question that the comments are in response to")
 
