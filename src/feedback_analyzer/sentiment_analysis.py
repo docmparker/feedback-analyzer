@@ -1,7 +1,7 @@
 from .utils import ToolSchema, escape_xml
 from .models_common import InputModel, SurveyTaskProtocol, CommentModel, LLMConfig
 from .single_input_task import apply_task
-from pydantic import Field, validate_arguments, BaseModel
+from pydantic import Field, validate_call, BaseModel
 from typing import Type, Literal
 from functools import partial
 from . import batch_runner as br
@@ -96,7 +96,8 @@ tool."""
         return SentimentAnalysisResult
     
 
-@validate_arguments
+# for direct use
+@validate_call
 async def classify_sentiment(*, comments: list[str | float | None], question: str, llm_config: LLMConfig | None = None) -> list[ToolSchema]:
     """Classify the sentiment for each of a list of comments, based on a particular question 
     
