@@ -1,3 +1,5 @@
+from ast import literal_eval
+import asyncio
 from .utils import ToolSchema, escape_xml
 from .models_common import InputModel, LLMConfig, SurveyTaskProtocol, CommentModel
 from .single_input_task import apply_task
@@ -71,7 +73,7 @@ into a single excerpt. When you are done with your excerpts, call the `ExcerptEx
 async def extract_excerpts(*, comments: list[str | float | None], 
                            question: str, 
                            goal_focus: str, 
-                           llm_config: LLMConfig | None = None) -> list[ToolSchema]:
+                           llm_config: LLMConfig | None = None) -> list[ExcerptExtractionResult]:
     """Extract excerpts from a list of comments, based on a particular question and goal_focus
     
     Returns a list of ExcerptExtractionResult objects
@@ -90,3 +92,21 @@ async def extract_excerpts(*, comments: list[str | float | None],
     extractions = await br.process_tasks(comments_to_test, ex_task)
 
     return extractions
+
+
+# ====================================================================================================
+# for agent tool use
+
+class ExcerptExtractionTool(ToolSchema):
+    """Tool to extract excerpts from a list of comments, given the list of comments, the survey question \
+that the comments are in response to, and the goal focus of interest. Returns a list of ExcerptExtractionResult objects."""
+    comments: list[str | float | None] = Field(..., description="List of comments to extract excerpts from")
+    question: str = Field(..., description="The survey question that the comments are in response to")
+    goal_focus: str = Field(..., description="The goal focus of interest for the extraction")
+
+    @staticmethod
+    def execute(comments: list[str | float | None], question: str, goal_focus: str) -> list[ExcerptExtractionResult]:
+        # sometimes this gets called with a string representation of a list, rather than an actual list
+        if isinstance(comments, str):
+            comments = literal_eval(comments)
+        return asyncio.run(extract_excerpts(comments=comments, question=question, goal_focus=goal_focus))
