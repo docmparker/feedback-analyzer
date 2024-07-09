@@ -1,3 +1,5 @@
+from ast import literal_eval
+import asyncio
 import textwrap
 from .utils import ToolSchema, escape_xml
 from .models_common import SurveyTaskProtocol, InputModel, CommentModel, CommentBatch, LLMConfig
@@ -205,3 +207,39 @@ async def find_themes(comments: list[str | float | None],
     derivation_result = await derivation_task(step3_input)
 
     return derivation_result
+
+
+# ====================================================================================================
+# for agent tool use
+
+class ThemeDerivationTool(ToolSchema):
+    """Tool to find the themes from a list of comments, given the list of comments and the survey question \
+that the comments are in response to. Returns a DerivedThemes object."""
+    comments: list[str | float | None] = Field(..., description="List of comments to analyze")
+    question: str = Field(..., description="The survey question that the comments are in response to")
+
+    @staticmethod
+    def execute(comments: list[str | float | None], question: str) -> DerivedThemes:
+        # sometimes this gets called with a string representation of a list, rather than an actual list
+        if isinstance(comments, str):
+            comments = literal_eval(comments)
+        return asyncio.run(find_themes(comments=comments, question=question))
+
+class DisplayThemesTool(ToolSchema):
+    """Tool to nicely display the themes and citations from a DerivedThemes object. Returns a string representation."""
+    derived_themes: DerivedThemes = Field(..., description="The DerivedThemes object to display")
+
+    @staticmethod
+    def execute(derived_themes: DerivedThemes) -> str:
+        # first cast the passed in object to the correct type
+        if type(derived_themes) == dict:
+            derived_themes = DerivedThemes(themes=[Theme(**theme) for theme in derived_themes['themes']])
+        output = []
+        for theme in derived_themes.themes:
+            output.append(f"Theme: {theme.theme_title}")
+            output.append(f"Description:\n{theme.description}")
+            output.append("Citations:")
+            for citation in theme.citations:
+                output.append(f"- \"{citation}\"")
+            output.append("")  # Empty line between themes
+        return "\n".join(output)
