@@ -1,3 +1,5 @@
+from ast import literal_eval
+import asyncio
 from enum import Enum
 from pydantic import Field, ConfigDict, validate_arguments
 from pydantic.main import create_model
@@ -143,3 +145,20 @@ async def multilabel_classify(*, comments: list[str | float | None],
     classifications = await br.process_tasks(comments_to_test, mlc_task)
 
     return classifications
+
+
+# ====================================================================================================
+# for agent tool use
+
+class MultlabelClassificationTool(ToolSchema):
+    """Tool to classify a list of comments, given the list of comments and a list of tags. \
+Returns a list of MultiLabelClassificationResult objects."""
+    comments: list[str | float | None] = Field(..., description="List of comments to extract excerpts from")
+    tags_list: list[dict[str, str]] | None = Field(None, description="The list of tags and descriptions to classify the comments with")
+
+    @staticmethod
+    def execute(comments: list[str | float | None], tags_list: list[dict[str, str]] | None = None) -> list[ToolSchema]:
+        # sometimes this gets called with a string representation of a list, rather than an actual list
+        if isinstance(comments, str):
+            comments = literal_eval(comments)
+        return asyncio.run(multilabel_classify(comments=comments, tags_list=tags_list))
