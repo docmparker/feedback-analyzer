@@ -3,7 +3,7 @@ import asyncio
 from .utils import ToolSchema, escape_xml
 from .models_common import InputModel, LLMConfig, SurveyTaskProtocol, CommentModel
 from .single_input_task import apply_task
-from pydantic import Field, validate_arguments
+from pydantic import Field, validate_call
 from typing import Type
 from functools import partial
 from . import batch_runner as br
@@ -69,7 +69,7 @@ into a single excerpt. When you are done with your excerpts, call the `ExcerptEx
         return ExcerptExtractionResult
     
 
-@validate_arguments
+@validate_call
 async def extract_excerpts(*, comments: list[str | float | None], 
                            question: str, 
                            goal_focus: str, 

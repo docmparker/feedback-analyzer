@@ -1,7 +1,7 @@
 from ast import literal_eval
 import asyncio
 from enum import Enum
-from pydantic import Field, ConfigDict, validate_arguments
+from pydantic import Field, ConfigDict, validate_call
 from pydantic.main import create_model
 from functools import partial
 from .utils import ToolSchema, escape_xml
@@ -121,7 +121,7 @@ tool."""
         return self._result_class
 
 
-@validate_arguments
+@validate_call
 async def multilabel_classify(*, comments: list[str | float | None], 
                               tags_list: list[dict[str, str]] | None = None, 
                               llm_config: LLMConfig | None = None) -> ToolSchema:

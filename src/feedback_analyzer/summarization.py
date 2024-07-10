@@ -2,7 +2,7 @@ import textwrap
 from .utils import ToolSchema, escape_xml
 from .models_common import InputModel, SurveyTaskProtocol, CommentModel, CommentBatch, LLMConfig
 from .single_input_task import apply_task
-from pydantic import Field, validate_arguments
+from pydantic import Field, validate_call
 from typing import Type
 from functools import partial
 
@@ -58,7 +58,7 @@ emphasized by multiple students). When you are done with your summary, call the 
         return SummarizationResult
     
 
-@validate_arguments
+@validate_call
 async def summarize_comments(*, comments: list[str | float | None], question: str, llm_config: LLMConfig | None = None) -> ToolSchema:
     """Summarize the themes of a group of comments, based on a particular question
     
