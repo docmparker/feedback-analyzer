@@ -5,6 +5,10 @@
 /notebooks/0*.ipynb
 .env
 
+/images/overview.pptx
+/images/theme_derivation_chain.png
+/images/tool_use.png
+
 .DS_Store
 __pycache__/
 
